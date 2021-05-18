@@ -103,7 +103,7 @@ if page == 'Screener':
         newtable.set_index('Final Rank',inplace=True)
         newtable.drop('Sum',axis=1,inplace=True)
         newtable['Price'] = newtable['Price'].round(2)
-    st.write('Eliminate all utilities and financial stocks (i.e., mutual funds, banks, and insurance companies) from the list. Eliminate all foreign companies from the list. In most cases, these will have the suffix “ADR” (for “American Depository Receipt”) after the name of the stock. If a stock has a very low P/E ratio, say 5 or less, that may indicate that the previous year or the data being used are unusual in some way. You may want to eliminate these stocks from your list. You may also want to eliminate any company that has announced earnings in the last week. (This should help minimize the incidence of incorrect or untimely data.)')
+    st.write('Eliminate all utilities and financial stocks (i.e., mutual funds, banks, and insurance companies) from the list. If a stock has a very low P/E ratio, say 5 or less, that may indicate that the previous year or the data being used are unusual in some way. You may want to eliminate these stocks from your list. You may also want to eliminate any company that has announced earnings in the last week. (This should help minimize the incidence of incorrect or untimely data.)')
     st.table(newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}'}))
     with st.beta_expander('More Info'):
         st.write('''
