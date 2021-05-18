@@ -37,7 +37,7 @@ if page =='Home':
 
     st.header('Summary')
     st.write(ticker.info['longBusinessSummary'])
-    st.write(ticker.info)
+    # st.write(ticker.info)
 
 if page == 'Historical Price':
     start_dt = st.date_input('Start Date',value = datetime(2020,1,1))
