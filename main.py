@@ -8,7 +8,7 @@ import requests
 
 
 st.set_page_config(page_title='Stonks',page_icon='https://yt3.ggpht.com/a/AATXAJwroVzth0tJxbrngf8YX6wYb3fQHoDS3cY40w=s900-c-k-c0xffffffff-no-rj-mo',layout='wide')
-st.title('Stock Analysis')
+st.title('Stonks Analysis')
 with st.sidebar.form(key='user input'):
     input_ticker = st.text_input('Enter Ticker',value='AAPL')
     input_exchange = st.selectbox('Select a Stock Exchange',['NYSE','NSE'],index=0)
