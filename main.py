@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit import beta_util
 import yfinance as yf
 import numpy as np
 import pandas as pd
@@ -31,16 +32,35 @@ elif input_exchange == 'NSE':
 if page =='Home':
     with st.spinner('Fetching...'): 
         c1,c2,c3,c4 = st.beta_columns(4)
-        summary = ticker.info['longBusinessSummary']
+        try:
+            summary = ticker.info['longBusinessSummary']  
+        except:
+            summary = "Not Available"
+        try:
+            currency = ticker.info['currency']  
+        except:
+            currency = "Not Available"
+        try:
+            marketcap = ticker.info['marketCap']  
+        except:
+            marketcap = "Not Available"
+        try:
+            trailingpe = ticker.info['trailingPE'] 
+        except:
+            trailingpe = "Not Available"
+        try:
+            beta = ticker.info['beta']
+        except:
+            beta = "Not Available"
         with c1:
             st.subheader('Market Cap')
-            st.write(ticker.info['currency'] +' '+ str(ticker.info['marketCap']))
+            st.write(str(currency) +' '+ str(marketcap))
         with c2:
             st.subheader('TTM P/E')
-            st.write(str(ticker.info['trailingPE']))
+            st.write(str(trailingpe))
         with c3:
             st.subheader('Beta')
-            st.write(str(ticker.info['beta']))
+            st.write(str(beta))
         with c4:
             st.image(ticker.info['logo_url'])
 
