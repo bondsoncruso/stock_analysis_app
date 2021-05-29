@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 import requests
-
+from bs4 import BeautifulSoup
 
 st.set_page_config(page_title='Stonks',page_icon='https://yt3.ggpht.com/a/AATXAJwroVzth0tJxbrngf8YX6wYb3fQHoDS3cY40w=s900-c-k-c0xffffffff-no-rj-mo',layout='wide')
 hide_streamlit_style = """
@@ -102,18 +102,33 @@ if page == 'Screener':
             url = f'https://www.screener.in/screens/376961/ALGO/?sort=EVEBITDA&order=asc%3Fpage%3D3&page={stri}'
             req = requests.get(url)
             html = req.content
+            soup = BeautifulSoup(html, 'lxml')
+            links = []
+            for link in soup.find_all('a'):
+                links.append(link.get('href'))
+            for item in list(links):
+                if '/company/' not in item:
+                    links.remove(item)
+            newlist = []
+            for item in list(links):
+                indx = item.find('y/')
+                tkr = item[indx+2:]
+                indx = tkr.find('/')
+                tkr = tkr[:indx]
+                newlist.append(tkr)
             df_list = pd.read_html(html,index_col='S.No.')
             df = df_list[0]
             df.drop(df.columns[[4,5,6,7,8]], axis = 1, inplace = True)
-            df.dropna(inplace=True)
             try:
                 df.drop(['S.No.'],inplace=True)
             except:
                 pass
+            df['Ticker/Code'] = newlist
+            df.dropna(inplace=True)
             table = pd.concat([table,df])
         newtable = table.astype({'Name':str, 'CMP  Rs.':float, 'P/E':float, 'Mar Cap  Rs.Cr.':float, 'ROCE  %':float, 'ROA 12M  %':float,'EV / EBITDA':float})
         newtable.sort_values(by='ROCE  %',inplace=True,ascending=False)
-        newtable.columns = ['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA']
+        newtable.columns = ['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','Ticker/Code']
         newtable['ROCE rank'] = [*range(1,newtable.shape[0]+1)]
         newtable.sort_values('EV/EBITDA',inplace=True)
         newtable['EV/EBITDA rank'] = [*range(1,newtable.shape[0]+1)]
@@ -124,9 +139,15 @@ if page == 'Screener':
         newtable.set_index('Final Rank',inplace=True)
         newtable.drop('Sum',axis=1,inplace=True)
         newtable['Price'] = newtable['Price'].round(2)
+        newtable = newtable.reindex(['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],axis="columns")
+        newtable['Ticker/Code'] = newtable['Ticker/Code'].astype('string')
     st.title('Screener')
     st.write('Eliminate all utilities and financial stocks (i.e., mutual funds, banks, and insurance companies) from the list. If a stock has a very low P/E ratio, say 5 or less, that may indicate that the previous year or the data being used are unusual in some way. You may want to eliminate these stocks from your list. You may also want to eliminate any company that has announced earnings in the last week. (This should help minimize the incidence of incorrect or untimely data.)')
-    st.table(newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}'}))
+    options = st.multiselect('Select columns to display',['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)'])
+    options.insert(0, 'Name')
+    newtable = newtable[options]
+    df = newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}','EV/EBITDA':'{:.2f}'})
+    st.table(df)
     with st.beta_expander('More Info'):
         st.markdown('''
         ## Return on Capital
