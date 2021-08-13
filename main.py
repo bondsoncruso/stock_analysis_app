@@ -17,139 +17,140 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-with st.sidebar.form(key='user input'):
-    input_ticker = st.text_input('Enter Ticker',value='AAPL')
-    input_exchange = st.selectbox('Select a Stock Exchange',['NYSE','NSE'],index=0)
-    submit_button = st.form_submit_button('Submit')
-page = st.sidebar.radio('Select Page',['Home','Historical Price','Screener'])
+# with st.sidebar.form(key='user input'):
+#     input_ticker = st.text_input('Enter Ticker',value='AAPL')
+#     input_exchange = st.selectbox('Select a Stock Exchange',['NYSE','NSE'],index=0)
+#     submit_button = st.form_submit_button('Submit')
+# page = st.sidebar.radio('Select Page',['Home','Historical Price','Screener'])
 
-if input_exchange == 'NYSE':
-    ticker = yf.Ticker(input_ticker.upper())
-elif input_exchange == 'NSE':
-    input_ticker = input_ticker.upper() + '.NS'
-    ticker = yf.Ticker(input_ticker)
+# if input_exchange == 'NYSE':
+#     ticker = yf.Ticker(input_ticker.upper())
+# elif input_exchange == 'NSE':
+#     input_ticker = input_ticker.upper() + '.NS'
+#     ticker = yf.Ticker(input_ticker)
 
-if page =='Home':
-    st.title('Stonks Analysis')
-    with st.spinner('Fetching...'): 
-        c1,c2,c3,c4 = st.beta_columns(4)
-        try:
-            summary = ticker.info['longBusinessSummary']  
-        except:
-            summary = "Not Available"
-        try:
-            currency = ticker.info['currency']  
-        except:
-            currency = "Not Available"
-        try:
-            marketcap = ticker.info['marketCap']  
-        except:
-            marketcap = "Not Available"
-        try:
-            trailingpe = ticker.info['trailingPE'] 
-        except:
-            trailingpe = "Not Available"
-        try:
-            beta = ticker.info['beta']
-        except:
-            beta = "Not Available"
-        with c1:
-            st.subheader('Market Cap')
-            st.write(str(currency) +' '+ str(marketcap))
-        with c2:
-            st.subheader('TTM P/E')
-            st.write(str(trailingpe))
-        with c3:
-            st.subheader('Beta')
-            st.write(str(beta))
-        with c4:
-            st.image(ticker.info['logo_url'])
-    st.header('Summary')
-    st.write(summary)
-    # st.write(ticker.info)
+# if page =='Home':
+#     st.title('Stonks Analysis')
+#     with st.spinner('Fetching...'): 
+#         c1,c2,c3,c4 = st.beta_columns(4)
+#         try:
+#             summary = ticker.info['longBusinessSummary']  
+#         except:
+#             summary = "Not Available"
+#         try:
+#             currency = ticker.info['currency']  
+#         except:
+#             currency = "Not Available"
+#         try:
+#             marketcap = ticker.info['marketCap']  
+#         except:
+#             marketcap = "Not Available"
+#         try:
+#             trailingpe = ticker.info['trailingPE'] 
+#         except:
+#             trailingpe = "Not Available"
+#         try:
+#             beta = ticker.info['beta']
+#         except:
+#             beta = "Not Available"
+#         with c1:
+#             st.subheader('Market Cap')
+#             st.write(str(currency) +' '+ str(marketcap))
+#         with c2:
+#             st.subheader('TTM P/E')
+#             st.write(str(trailingpe))
+#         with c3:
+#             st.subheader('Beta')
+#             st.write(str(beta))
+#         with c4:
+#             st.image(ticker.info['logo_url'])
+#     st.header('Summary')
+#     st.write(summary)
+#     # st.write(ticker.info)
 
-if page == 'Historical Price':
-    st.title('Historical Price')
-    with st.spinner('Drawing...'): 
-        start_dt = st.date_input('Start Date',value = datetime(2020,1,1))
-        end_dt = st.date_input('End Date')
-        history = ticker.history(period = 'max',start=start_dt,end=end_dt)
-        figure = go.Figure(
-            data = [
-                    go.Candlestick(
-                        x = history.index,
-                        low = history.Low,
-                        high = history.High,
-                        close = history.Close,
-                        open = history.Open,
-                        # increasing_line_color = 'green',
-                        # decreasing_line_color = 'red'
-                    )
-                ]
-            )
-        figure.update_layout(xaxis_rangeslider_visible=False)
-    st.plotly_chart(figure)
+# if page == 'Historical Price':
+#     st.title('Historical Price')
+#     with st.spinner('Drawing...'): 
+#         start_dt = st.date_input('Start Date',value = datetime(2020,1,1))
+#         end_dt = st.date_input('End Date')
+#         history = ticker.history(period = 'max',start=start_dt,end=end_dt)
+#         figure = go.Figure(
+#             data = [
+#                     go.Candlestick(
+#                         x = history.index,
+#                         low = history.Low,
+#                         high = history.High,
+#                         close = history.Close,
+#                         open = history.Open,
+#                         # increasing_line_color = 'green',
+#                         # decreasing_line_color = 'red'
+#                     )
+#                 ]
+#             )
+#         figure.update_layout(xaxis_rangeslider_visible=False)
+#     st.plotly_chart(figure)
 
-if page == 'Screener':
-    with st.spinner('Calculating...'): 
-        url = 'https://www.screener.in/screens/376961/ALGO/?page=1'
-        req = requests.get(url)
-        indx = req.text.find('Showing page ')
-        afindx = int(req.text[indx+18])
-        table = pd.DataFrame()
-        for i in range(1,afindx+1):
-            stri = str(i)
-            url = f'https://www.screener.in/screens/376961/ALGO/?sort=EVEBITDA&order=asc%3Fpage%3D3&page={stri}'
-            req = requests.get(url)
-            html = req.content
-            soup = BeautifulSoup(html, 'lxml')
-            links = []
-            for link in soup.find_all('a'):
-                links.append(link.get('href'))
-            for item in list(links):
-                if '/company/' not in item:
-                    links.remove(item)
-            newlist = []
-            for item in list(links):
-                indx = item.find('y/')
-                tkr = item[indx+2:]
-                indx = tkr.find('/')
-                tkr = tkr[:indx]
-                newlist.append(tkr)
-            df_list = pd.read_html(html,index_col='S.No.')
-            df = df_list[0]
-            df.drop(df.columns[[4,5,6,7,8]], axis = 1, inplace = True)
-            try:
-                df.drop(['S.No.'],inplace=True)
-            except:
-                pass
-            df['Ticker/Code'] = newlist
-            df.dropna(inplace=True)
-            table = pd.concat([table,df])
-        newtable = table.astype({'Name':str, 'CMP  Rs.':float, 'P/E':float, 'Mar Cap  Rs.Cr.':float, 'ROCE  %':float, 'ROA 12M  %':float,'EV / EBITDA':float})
-        newtable.sort_values(by='ROCE  %',inplace=True,ascending=False)
-        newtable.columns = ['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','Ticker/Code']
-        newtable['ROCE rank'] = [*range(1,newtable.shape[0]+1)]
-        newtable.sort_values('EV/EBITDA',inplace=True)
-        newtable['EV/EBITDA rank'] = [*range(1,newtable.shape[0]+1)]
-        newtable['Sum'] = newtable['EV/EBITDA rank'] + newtable['ROCE rank']
-        newtable.sort_values('Sum',inplace=True)
-        newtable['Final Rank'] = [*range(1,newtable.shape[0]+1)]
-        newtable.reset_index(drop=True, inplace=True)
-        newtable.set_index('Final Rank',inplace=True)
-        newtable.drop('Sum',axis=1,inplace=True)
-        newtable['Price'] = newtable['Price'].round(2)
-        newtable = newtable.reindex(['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],axis="columns")
-        newtable['Ticker/Code'] = newtable['Ticker/Code'].astype('string')
-    st.title('Screener')
-    st.write('Eliminate all utilities and financial stocks (i.e., mutual funds, banks, and insurance companies) from the list. If a stock has a very low P/E ratio, say 5 or less, that may indicate that the previous year or the data being used are unusual in some way. You may want to eliminate these stocks from your list. You may also want to eliminate any company that has announced earnings in the last week. (This should help minimize the incidence of incorrect or untimely data.)')
-    options = st.multiselect('Select columns to display',['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)'])
-    options.insert(0, 'Name')
-    newtable = newtable[options]
-    df = newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}','EV/EBITDA':'{:.2f}'})
-    st.table(df)
-    with st.beta_expander('More Info'):
-        st.markdown('''
+# if page == 'Screener':
+    # with st.spinner('Calculating...'): 
+
+url = 'https://www.screener.in/screens/376961/ALGO/?page=1'
+req = requests.get(url)
+indx = req.text.find('Showing page ')
+afindx = int(req.text[indx+18])
+table = pd.DataFrame()
+for i in range(1,afindx+1):
+    stri = str(i)
+    url = f'https://www.screener.in/screens/376961/algo/?sort=EVEBITDA&order=asc&page={stri}'
+    req = requests.get(url)
+    html = req.content
+    soup = BeautifulSoup(html, 'lxml')
+    links = []
+    for link in soup.find_all('a'):
+        links.append(link.get('href'))
+    for item in list(links):
+        if '/company/' not in item:
+            links.remove(item)
+    newlist = []
+    for item in list(links):
+        indx = item.find('y/')
+        tkr = item[indx+2:]
+        indx = tkr.find('/')
+        tkr = tkr[:indx]
+        newlist.append(tkr)
+    df_list = pd.read_html(html,index_col='S.No.')
+    df = df_list[0]
+    df.drop(df.columns[[4,5,6,7,8]], axis = 1, inplace = True)
+    try:
+        df.drop(['S.No.'],inplace=True)
+    except:
+        pass
+    df['Ticker/Code'] = newlist
+    df.dropna(inplace=True)
+    table = pd.concat([table,df])
+newtable = table.astype({'Name':str, 'CMP  Rs.':float, 'P/E':float, 'Mar Cap  Rs.Cr.':float, 'ROCE  %':float, 'ROA 12M  %':float,'EV / EBITDA':float})
+newtable.sort_values(by='ROCE  %',inplace=True,ascending=False)
+newtable.columns = ['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','Ticker/Code']
+newtable['ROCE rank'] = [*range(1,newtable.shape[0]+1)]
+newtable.sort_values('EV/EBITDA',inplace=True)
+newtable['EV/EBITDA rank'] = [*range(1,newtable.shape[0]+1)]
+newtable['Sum'] = newtable['EV/EBITDA rank'] + newtable['ROCE rank']
+newtable.sort_values('Sum',inplace=True)
+newtable['Final Rank'] = [*range(1,newtable.shape[0]+1)]
+newtable.reset_index(drop=True, inplace=True)
+newtable.set_index('Final Rank',inplace=True)
+newtable.drop('Sum',axis=1,inplace=True)
+newtable['Price'] = newtable['Price'].round(2)
+newtable = newtable.reindex(['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],axis="columns")
+newtable['Ticker/Code'] = newtable['Ticker/Code'].astype('string')
+st.title('Screener')
+st.write('Eliminate all utilities and financial stocks (i.e., mutual funds, banks, and insurance companies) from the list. If a stock has a very low P/E ratio, say 5 or less, that may indicate that the previous year or the data being used are unusual in some way. You may want to eliminate these stocks from your list. You may also want to eliminate any company that has announced earnings in the last week. (This should help minimize the incidence of incorrect or untimely data.)')
+options = st.multiselect('Select columns to display',['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)'])
+options.insert(0, 'Name')
+newtable = newtable[options]
+df = newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}','EV/EBITDA':'{:.2f}'})
+st.table(df)
+with st.beta_expander('More Info'):
+    st.markdown('''
         ## Return on Capital
 >  EBIT/(Net Working Capital + Net Fixed Assets)
 
