@@ -142,12 +142,41 @@ newtable.drop('Sum',axis=1,inplace=True)
 newtable['Price'] = newtable['Price'].round(2)
 newtable = newtable.reindex(['Name','Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],axis="columns")
 newtable['Ticker/Code'] = newtable['Ticker/Code'].astype('string')
+options = list(newtable.columns)
 st.title('Screener')
+uploaded_file = st.file_uploader('Upload csv from tickertape')
+# st.write(type(list(options)))
 st.write('Eliminate all utilities and financial stocks (i.e., mutual funds, banks, and insurance companies) from the list. If a stock has a very low P/E ratio, say 5 or less, that may indicate that the previous year or the data being used are unusual in some way. You may want to eliminate these stocks from your list. You may also want to eliminate any company that has announced earnings in the last week. (This should help minimize the incidence of incorrect or untimely data.)')
-options = st.multiselect('Select columns to display',['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)'])
-options.insert(0, 'Name')
-newtable = newtable[options]
-df = newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}','EV/EBITDA':'{:.2f}'})
+# options = st.multiselect('Select columns to display',['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)','EV/EBITDA','EV/EBITDA rank','ROCE rank','Ticker/Code'],['Price','P/E','Market Cap(Cr)','ROCE(%)','ROA(%)'])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    # df.dropna(inplace=True)/
+    df.columns = df.columns.str.replace('Â','').str.replace('','').str.replace('','').str.replace('â','')
+
+    df.sort_values(by='EV / EBIT Ratio',inplace=True,ascending=True)
+    df['EV/EBIT rank'] = [*range(1,df.shape[0]+1)]
+
+    df['EBIT/ROC'] = df['PBIT']/df['Return on Capital']
+    df.sort_values(by='EBIT/ROC',inplace=True,ascending=False)
+    df['EBIT/ROC rank'] = [*range(1,df.shape[0]+1)]
+
+    df['combined'] = df['EBIT/ROC rank'] + df['EBIT/ROC']
+    df.sort_values(by='combined',inplace=True,ascending=True)
+    df['Final rank'] = [*range(1,df.shape[0]+1)]
+
+    df.set_index('Final rank',inplace=True)
+    options = list(df.columns)
+    options = st.multiselect('Select columns to display',options,options[:3]+options[-5:-1])
+    df = df[options]
+else:
+    options = st.multiselect('Select columns to display',options[1:],options[1:6])
+    options.insert(0, 'Name')
+    newtable = newtable[options]
+    df = newtable.style.format({'Price': '{:.2f}', 'P/E': '{:.2f}', 'Market Cap(Cr)': '{:.2f}','ROCE(%)': '{:.2f}','ROA(%)':'{:.2f}','EV/EBITDA':'{:.2f}'})
+
+
+
 st.table(df)
 with st.beta_expander('More Info'):
     st.markdown('''
