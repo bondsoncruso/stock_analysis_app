@@ -161,7 +161,7 @@ if uploaded_file is not None:
     df.sort_values(by='EBIT/ROC',inplace=True,ascending=False)
     df['EBIT/ROC rank'] = [*range(1,df.shape[0]+1)]
 
-    df['combined'] = df['EBIT/ROC rank'] + df['EBIT/ROC']
+    df['combined'] = df['EBIT/ROC rank'] + df['EBIT/ROC rank']
     df.sort_values(by='combined',inplace=True,ascending=True)
     df['Final rank'] = [*range(1,df.shape[0]+1)]
 
